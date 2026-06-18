@@ -1,0 +1,296 @@
+# Trip Atlas — 專案 Detail 文件
+版本：v1.6
+
+---
+
+## 第一節　專案概述
+
+Trip Atlas 是一款個人旅行規劃工具，讓使用者以視覺化地圖方式管理旅行地點、行程、清單與 AI 分析筆記。
+核心使用情境：出發前蒐集想去的地點、貼上 YouTube / 部落格文字稿讓 AI 萃取推薦地點、拖拉排序每日行程。
+
+線上網址：https://trip-atlas-smoky.vercel.app
+
+---
+
+## 第二節　版本變更摘要
+
+### v1.6（當前版本）
+- 地點型別標籤中文化（25 種對照表，primaryTypeDisplayName + primaryType 雙欄位 fallback，找不到顯示「地點」）
+- 訂位/航班資訊區塊（TripNotesPanel 改為三折疊：✈ 航班 / 🏨 住宿 / 📝 筆記，存入 trips.flight_info & accommodation jsonb）
+- 地點多張照片（place-photo API 加 photoIndex 0/1/2，詳情面板橫向相簿 + lightbox 全螢幕放大）
+- 天氣整合（Open-Meteo 免費 API，/api/weather，行程 tab 每天標題顯示天氣 emoji，hover tooltip 含溫度/降雨）
+
+### v1.5
+- 漢堡選單填入實際功能（AI 小助手 / 分享連結 / 行程筆記）
+- 新增 /share/[tripId] 唯讀分享頁（地點清單、類別標籤、筆記）
+- 手機版底部安全區（viewport-fit=cover + env(safe-area-inset-bottom)）
+- 新 trip 空白狀態三張引導卡片（搜尋 / AI / 地圖）
+- 開場動畫縮短至 1.5 秒淡出（原 2.5 秒）
+
+### v1.4
+- 多 trip 切換架構（TripSwitcher 元件，localStorage 記憶上次 trip）
+- AI 文字稿分析：旅行小助手（YouTube 逐字稿自動抓取 + 手動貼文分析）
+- 地理範圍限定分析（依 trip 地區限縮 AI 分析與地點搜尋範圍）
+- 地點縮圖自動抓取（Google Places Photo API）
+- 地點類型標籤（place_type 自動補抓）
+- 愛心評分元件（HeartRating，1–5 顆心）
+- Tips / 優缺點 / 價位欄位（tips_pros、tips_cons、price_info）
+- 行程筆記（TripNotesPanel，jsonb 儲存於 trips 表）
+- 分析歷史記錄（AnalysisRecords 元件，已命名 + 未命名兩區）
+- 開場動畫（SplashScreen，椰子樹擺動，sessionStorage 控制）
+- 漢堡選單骨架（SideMenu，含「即將推出」佔位項）
+- 手機版白色面板圓角（border-radius: 20px 20px 0 0）
+
+### v1.3
+- InnerTube 4-client fallback（ANDROID → WEB → TVHTML5 → ANDROID_EMBEDDED_PLAYER）
+- 解決手機版 YouTube 字幕抓取失敗問題
+
+### v1.2
+- 行程規劃（ItineraryPanel）：拖拉排序、每日時間規劃、交通備註
+- 地圖依行程天數顯示對應地點
+- 調整天數警示對話框
+
+### v1.1
+- 多清單管理（ListPanel）
+- 地點搜尋 Google Autocomplete
+- 地點詳情面板（評分、筆記、Tips）
+- PlaceLinks 外部連結管理
+
+### v1.0
+- 基礎地圖 + 地點 CRUD
+- Supabase 後端串接
+- Vercel 部署
+
+---
+
+## 第三節　技術堆疊
+
+| 層級 | 技術 |
+|------|------|
+| 框架 | Next.js 14 App Router（TypeScript） |
+| 樣式 | Tailwind CSS + CSS 變數（--color-*） |
+| 地圖 | Google Maps JavaScript API（@vis.gl/react-google-maps） |
+| 地點搜尋 | Google Places API v2（New）|
+| AI 分析 | Anthropic Claude claude-sonnet-4-6 |
+| 字幕抓取 | 自實作 InnerTube API（4-client fallback） |
+| 資料庫 | Supabase（PostgreSQL） |
+| 部署 | Vercel（Production） |
+| 拖拉排序 | @dnd-kit/core + @dnd-kit/sortable |
+
+---
+
+## 第四節　開發進度（階段）
+
+### ✅ 階段 1　基礎架構
+- Next.js 專案建立、Supabase 串接、Vercel 部署
+- Google Maps 地圖顯示、地點 CRUD、分類標籤
+
+### ✅ 階段 2　清單與詳情
+- 多清單管理、Google Autocomplete 搜尋
+- 地點詳情面板（筆記、評分、Tips、外部連結）
+- 地點縮圖、類型標籤自動補抓
+
+### ✅ 階段 3　行程規劃
+- 多 trip 切換（TripSwitcher）
+- ItineraryPanel（拖拉排序、時間、交通備註、天數調整）
+- 行程筆記（TripNotesPanel）
+
+### ✅ 階段 4　AI 分析與視覺功能
+- 旅行小助手（TripInfoExtractor）：YouTube URL / 手動文字稿
+- InnerTube 4-client fallback（手機版修復）
+- 地理範圍限定分析（tripRegion → locationBias + 系統提示限縮）
+- 分析歷史記錄（AnalysisRecords）、儲存分析自訂名稱
+- 地圖切換 trip 時 panTo 城市座標（zoom: 11）
+- 開場動畫（SplashScreen）
+- 漢堡選單骨架（SideMenu）
+- 手機版面板圓角
+
+### ✅ 階段 5　視覺強化與 PWA
+
+   P1：
+   - AI 分析結果直接落地加入清單（＋加入按鈕，搜不到用城市中心座標 fallback）
+   - 未排入地點視圖（行程 tab 頂部橫向捲動，點＋選天加入）
+   - 交通時間自動估算（選交通工具後呼叫 Routes API 自動填分鐘）
+
+   P2：
+   - 清單顏色對應地圖 pin 顏色（PinElement background）
+   - 行程時間軸視圖（時間標籤、停留時間、交通段、⚠ 時間衝突警告）
+   - PWA 離線支援（manifest.json + sw.js，可加到主畫面）
+   - 費用追蹤（estimated_cost 欄位、每天加總、全程加總、幣別 THB）
+
+   資料庫欄位：
+   - places 新增：estimated_cost numeric
+   - trips 新增：currency text DEFAULT 'THB'
+
+   v1.5 追加：
+   - 漢堡選單填入實際功能（AI 小助手 / 分享連結 / 行程筆記）
+   - 新增 /share/[tripId] 唯讀分享頁
+   - 手機版底部安全區（viewport-fit=cover + env(safe-area-inset-bottom)）
+   - 開場動畫縮短至 1.5 秒
+
+### ✅ 階段 6　細節強化與資料整合
+- 地點型別標籤中文化（25 種 fallback 對照表）
+- TripNotesPanel 重構為三折疊（✈ 航班 / 🏨 住宿 / 📝 筆記）
+- 地點詳情多張照片橫向相簿 + lightbox
+- Open-Meteo 天氣整合（行程每天 emoji + tooltip）
+
+  資料庫欄位補充：
+  - trips 新增：flight_info jsonb DEFAULT '[]'
+  - trips 新增：accommodation jsonb DEFAULT '[]'
+
+  Supabase SQL（需手動執行一次）：
+  ```sql
+  ALTER TABLE trips ADD COLUMN IF NOT EXISTS flight_info jsonb DEFAULT '[]';
+  ALTER TABLE trips ADD COLUMN IF NOT EXISTS accommodation jsonb DEFAULT '[]';
+  ```
+
+### 🔲 階段 7（待定）
+
+## 第五節　元件清單
+
+| 元件 | 說明 |
+|------|------|
+| `Map.tsx` | Google Maps 地圖，支援 panTo + zoom |
+| `ListPanel.tsx` | 清單管理面板 |
+| `ItineraryPanel.tsx` | 行程規劃（拖拉排序） |
+| `TripInfoExtractor.tsx` | AI 文字稿分析，FAB + 結果卡片 |
+| `AnalysisRecords.tsx` | 分析歷史記錄面板（已命名 / 歷史） |
+| `TripSwitcher.tsx` | Trip 切換面板 |
+| `TripNotesPanel.tsx` | 三折疊面板（✈ 航班 / 🏨 住宿 / 📝 筆記） |
+| `PlaceLinks.tsx` | 地點外部連結管理 |
+| `HeartRating.tsx` | 愛心評分元件（1–5） |
+| `SplashScreen.tsx` | 開場動畫（椰子樹，sessionStorage 控制） |
+| `SideMenu.tsx` | 漢堡選單面板（AI 小助手 / 分享連結 / 行程筆記） |
+| `share/[tripId]/page.tsx` | 唯讀分享頁（地點清單，無編輯功能） |
+
+---
+
+## 第六節　資料結構（Supabase）
+
+### places 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| trip_id | uuid | FK → trips |
+| name | text | 地點名稱 |
+| category | text | 逗號分隔（餐廳,咖啡廳） |
+| lat / lng | float8 | 座標 |
+| address | text | 地址 |
+| google_place_id | text | Google Place ID |
+| place_type | text | 地點類型（自動補抓） |
+| my_notes | text | 個人筆記 |
+| interest_rating | integer | 愛心評分 0–5 |
+| tips_pros | text[] | 優點清單 |
+| tips_cons | text[] | 缺點清單 |
+| price_info | text | 價位資訊 |
+| created_at | timestamptz | 建立時間 |
+
+### trips 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| name | text | 行程名稱 |
+| start_date / end_date | date | 旅行日期 |
+| country | text | 國家（中文） |
+| country_en | text | 國家（英文） |
+| region | text | 城市/地區（中文） |
+| region_en | text | 城市/地區（英文） |
+| trip_notes | jsonb | 行程筆記陣列 [{text, created_at}] |
+| flight_info | jsonb | 航班資訊陣列 [{id, flightNo, date, direction, departTime, arriveTime, confirmCode}] |
+| accommodation | jsonb | 住宿資訊陣列 [{id, hotelName, checkin, checkout, confirmCode, address}] |
+| created_at | timestamptz | 建立時間 |
+
+### lists 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| trip_id | uuid | FK → trips |
+| name | text | 清單名稱 |
+| color | text | 顏色（hex） |
+
+### place_lists 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| place_id | uuid | FK → places |
+| list_id | uuid | FK → lists |
+
+### itinerary 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| trip_id | uuid | FK → trips |
+| place_id | uuid | FK → places |
+| day_number | integer | 第幾天 |
+| order_index | integer | 當天排序 |
+| planned_time | text | 預計時間（HH:MM） |
+| transport_note | text | 交通備註 |
+| duration_minutes | integer | 停留分鐘 |
+
+### transcript_analyses 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| id | uuid | PK |
+| trip_id | uuid | FK → trips |
+| transcript | text | 原始文字稿 |
+| result | jsonb | AI 分析結果 |
+| name | text | 自訂分析名稱（可 null） |
+| created_at | timestamptz | 建立時間 |
+
+---
+
+## 第七節　API 路由
+
+| 路由 | 方法 | 說明 |
+|------|------|------|
+| `/api/youtube-transcript` | GET | 抓取 YouTube 字幕（InnerTube 4-client） |
+| `/api/extract-trip-info` | POST | Claude AI 分析文字稿，回傳 places + notes |
+| `/api/place-search` | GET | Google Places 搜尋（支援 locationBias） |
+| `/api/place-photo` | GET | Google Places 縮圖代理 |
+| `/api/place-type` | GET | 補抓地點類型 |
+| `/api/poi-details` | GET | 地點詳細資訊 |
+| `/api/route` | GET | 路線規劃（保留） |
+| `/api/og` | GET | Open Graph 圖片 |
+| `/api/weather` | GET | Open-Meteo 天氣（lat, lng → 16 天 emoji/溫度/降雨，快取 1h） |
+
+---
+
+## 第八節　啟動新對話指令
+
+沿用 Trip Atlas detail 文件，當前在【階段 6 完成 / 階段 7 待定】，我要開始 [具體任務]。
+
+---
+
+## 第九節　技術環境與環境變數
+
+### 環境變數（.env.local / Vercel）
+| 變數 | 說明 | 位置 |
+|------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 專案 URL | 客戶端可用 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | 客戶端可用 |
+| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Google Maps JS API | 客戶端可用 |
+| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Google Places API v2 | 伺服器端（route.ts） |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API | 伺服器端，已設定於 Vercel |
+
+### 本地開發
+```bash
+npm run dev        # 啟動開發伺服器 http://localhost:3000
+npm run build      # 本地 build 確認（Vercel 用相同流程）
+npx tsc --noEmit   # TypeScript 型別檢查
+vercel --prod      # 部署到 Production
+```
+
+---
+
+## 第十節　操作陷阱與注意事項
+
+1. **型別檢查先行**：每次改動 `page.tsx` 或新元件後，先 `npx tsc --noEmit` 確認無錯再部署
+2. **ESLint 是 blocking**：Vercel build 時 ESLint error（非 warning）會導致部署失敗，`no-unused-vars` 最常見
+3. **`<img>` 使用 warning**：Next.js 建議用 `<Image />`，目前保留 `<img>` 的地方屬已知 warning，不影響 build
+4. **react-hooks/exhaustive-deps warning**：部分 `useEffect` 依賴陣列故意省略（避免無限迴圈），屬已知 warning
+5. **InnerTube 客戶端輪替**：YouTube 字幕 API 依靠 4 個 InnerTube client 輪替，若全部失敗才回傳錯誤
+6. **locationBias 單位**：Google Places v2 的 `locationBias.circle.radius` 單位為公尺（50000 = 50km）
+7. **sessionStorage 開場動畫**：SplashScreen 用 `tripAtlasSplashSeen` 控制，同一 session 只顯示一次；**無痕視窗可重新觸發**
+8. **`.next` 快取問題**：改動較大時（特別是 CSS 變數、全域樣式），快取容易壞掉，主動執行 `rm -rf .next && npm run dev` 重置
+9. **手機拖拉範圍**：整個 sidebar header 都可拖拉，但按鈕點擊會透過 `closest('button, a, input')` 跳過拖拉邏輯
+10. **tripRegion 來源**：`fetchTrip()` 從 `trips.region` 對應 `destinations.ts` 城市坐標，切換 trip 後自動 panTo

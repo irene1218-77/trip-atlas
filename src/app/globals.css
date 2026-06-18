@@ -2,26 +2,160 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Trip Atlas 綠白配色系統 */
+    --color-primary: #2D6A4F;
+    --color-primary-light: #52B788;
+    --color-primary-pale: #D8F3DC;
+    --color-bg: #F8FAF8;
+    --color-surface: #FFFFFF;
+    --color-text: #1B1B1B;
+    --color-text-muted: #6B7280;
+    --color-border: #E2E8E4;
+    /* shadcn 保留變數 */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --radius: 0.5rem;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    /* 正確套用 Geist Sans，layout.tsx 注入 --font-geist-sans */
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ───── 自訂細 scrollbar ───── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-light);
+}
+
+/* ───── 全局互動過渡（讓 JS inline 的 hover 狀態變流暢） ───── */
+button,
+a {
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+/* ───── RWD：手機版面 ───── */
+/* 桌機：水平排列（預設） */
+.trip-layout {
+  display: flex;
+  flex-direction: row;
+}
+
+/* 手機（< 768px）：地圖上方彈性高度，側欄下方可拖拉 */
+@media (max-width: 767px) {
+  .trip-layout {
+    flex-direction: column;
+  }
+  .trip-sidebar {
+    width: 100% !important;
+    min-width: unset !important;
+    height: var(--sidebar-mobile-height, 55vh) !important;
+    border-right: none !important;
+    border-top: none !important;
+    order: 2;
+    flex-shrink: 0;
+    position: relative !important;
+    overflow: hidden !important;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .trip-map {
+    flex: 1 1 0 !important;
+    min-height: 15vh !important;
+    order: 1;
+  }
+  .mobile-drag-handle {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    height: 20px;
+    cursor: ns-resize;
+    flex-shrink: 0;
+  }
+  .mobile-drag-pill {
+    width: 36px;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 99px;
+  }
+}
+
+/* 桌機隱藏拖拉手把 */
+.mobile-drag-handle {
+  display: none;
+}
+
+/* ───── HeartRating 動畫 ───── */
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45); }
+  65%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+@keyframes rippleOut {
+  0%   { transform: scale(0.4); opacity: 0.55; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+.heart-animate {
+  animation: heartPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.heart-ripple {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  pointer-events: none;
+  animation: rippleOut 0.42s ease-out forwards;
+  z-index: 0;
 }
