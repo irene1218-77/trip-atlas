@@ -67,11 +67,12 @@ export default function AnalysisRecords({ isOpen, tripId, onClose, onLoadAnalysi
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 20,
+      position: 'absolute', inset: 0, zIndex: 5,
       background: 'var(--color-surface)',
       transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform 0.25s ease',
       display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      pointerEvents: isOpen ? 'auto' : 'none',
     }}>
       <div className="px-4 py-3 flex items-center gap-2 flex-shrink-0"
         style={{ borderBottom: '1px solid var(--color-border)' }}>

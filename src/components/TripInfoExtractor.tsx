@@ -71,9 +71,8 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
   useEffect(() => {
     if (openTrigger && openTrigger > 0) setIsOpen(true)
   }, [openTrigger])
-  const [showRecords, setShowRecords] = useState(false)
-  const [showFabMenu, setShowFabMenu] = useState(false)
 
+  const [showRecords, setShowRecords] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
   const [results, setResults] = useState<ExtractResult | null>(null)
@@ -299,77 +298,8 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
     setCurrentAnalysisName(null)
   }
 
-  const anyPanelOpen = isOpen || showRecords
-
   return (
     <>
-      {/* FAB with hover slide-out menu */}
-      {!anyPanelOpen && (
-        <div
-          style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 16, zIndex: 15, display: 'flex', alignItems: 'center', gap: 8 }}
-          onMouseEnter={() => setShowFabMenu(true)}
-          onMouseLeave={() => setShowFabMenu(false)}
-        >
-          {/* Sliding options */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            overflow: 'hidden',
-            maxWidth: showFabMenu ? 300 : 0,
-            opacity: showFabMenu ? 1 : 0,
-            transition: 'max-width 0.22s ease, opacity 0.18s ease',
-            pointerEvents: showFabMenu ? 'auto' : 'none',
-          }}>
-            <button
-              onClick={() => { setShowRecords(true); setShowFabMenu(false) }}
-              style={{
-                whiteSpace: 'nowrap',
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 20,
-                padding: '6px 14px',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--color-text)',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              }}>
-              我的分析紀錄
-            </button>
-            <button
-              onClick={() => { setIsOpen(true); setShowFabMenu(false) }}
-              style={{
-                whiteSpace: 'nowrap',
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 20,
-                padding: '6px 14px',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--color-text)',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              }}>
-              旅行小助手
-            </button>
-          </div>
-          {/* Main FAB */}
-          <button
-            onClick={() => setShowFabMenu(v => !v)}
-            title="旅行小助手"
-            style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: 'var(--color-primary)', color: 'white', border: 'none',
-              boxShadow: '0 4px 16px rgba(45,106,79,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-              flexShrink: 0,
-            }}>
-            <Sparkles size={18} />
-          </button>
-        </div>
-      )}
-
       {/* AnalysisRecords panel */}
       <AnalysisRecords
         isOpen={showRecords}
@@ -380,11 +310,12 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
 
       {/* Main panel */}
       <div style={{
-        position: 'absolute', inset: 0, zIndex: 20,
+        position: 'absolute', inset: 0, zIndex: 5,
         background: 'var(--color-surface)',
         transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.25s ease',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        pointerEvents: isOpen ? 'auto' : 'none',
       }}>
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 flex-shrink-0"

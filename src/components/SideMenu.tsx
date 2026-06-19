@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, NotebookPen, Share2, Check } from 'lucide-react'
+import { Sparkles, NotebookPen, Share2, Check, ListChecks } from 'lucide-react'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   onOpenAI: () => void
   onOpenNotes: () => void
+  onOpenManageLists: () => void
   tripId: string | null
 }
 
-export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, tripId }: Props) {
+export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, onOpenManageLists, tripId }: Props) {
   const [copied, setCopied] = useState(false)
 
   function handleOpenAI() {
@@ -22,6 +23,11 @@ export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, tripI
   function handleOpenNotes() {
     onClose()
     setTimeout(onOpenNotes, 280)
+  }
+
+  function handleOpenManageLists() {
+    onClose()
+    setTimeout(onOpenManageLists, 280)
   }
 
   async function handleShare() {
@@ -47,6 +53,12 @@ export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, tripI
       desc: 'AI 分析旅遊影片，快速找到好地方',
       icon: <Sparkles size={18} />,
       onClick: handleOpenAI,
+    },
+    {
+      label: '清單管理',
+      desc: '編輯清單名稱、顏色，或刪除清單',
+      icon: <ListChecks size={18} />,
+      onClick: handleOpenManageLists,
     },
     {
       label: '旅行清單分享',

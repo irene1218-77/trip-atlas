@@ -359,7 +359,10 @@ export default function Home() {
     setPreviewMarker(null)
   }
 
-  function openListPanel() {
+  const [listPanelInitialView, setListPanelInitialView] = useState<'main' | 'add' | 'manage'>('main')
+
+  function openListPanel(view: 'main' | 'add' | 'manage' = 'main') {
+    setListPanelInitialView(view)
     setShowListPanel(true)
     setDetailPlace(null)
     setActiveId(null)
@@ -700,6 +703,7 @@ export default function Home() {
         onClose={() => setShowSideMenu(false)}
         onOpenAI={() => setAiOpenTrigger(t => t + 1)}
         onOpenNotes={() => { setShowNotesPanel(true); setDetailPlace(null); setShowListPanel(false) }}
+        onOpenManageLists={() => openListPanel('manage')}
         tripId={currentTripId}
       />
 
@@ -877,8 +881,8 @@ export default function Home() {
                 )}
               </div>
               <button
-                onClick={openListPanel}
-                title="管理清單"
+                onClick={() => openListPanel('add')}
+                title="新增清單"
                 className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-base font-medium leading-none"
                 style={{ background: 'var(--color-primary)', color: 'white', border: 'none', cursor: 'pointer' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.85'}
@@ -1331,6 +1335,7 @@ export default function Home() {
           {showListPanel && (
             <ListPanel lists={lists} placeLists={placeLists}
               currentTripId={currentTripId ?? ''}
+              initialView={listPanelInitialView}
               onClose={() => setShowListPanel(false)}
               onListsChange={() => { fetchLists(); fetchPlaceLists() }} />
           )}

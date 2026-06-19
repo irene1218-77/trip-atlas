@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Trash2, MoreHorizontal, Plus } from 'lucide-react'
+import { ArrowLeft, Trash2, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { List, PlaceList } from '@/types'
 
@@ -18,14 +18,15 @@ interface ListPanelProps {
   lists: List[]
   placeLists: PlaceList[]
   currentTripId: string
+  initialView?: View
   onClose: () => void
   onListsChange: () => void
 }
 
 type View = 'main' | 'add' | 'manage'
 
-export default function ListPanel({ lists, placeLists, currentTripId, onClose, onListsChange }: ListPanelProps) {
-  const [view, setView] = useState<View>('main')
+export default function ListPanel({ lists, placeLists, currentTripId, initialView = 'main', onClose, onListsChange }: ListPanelProps) {
+  const [view, setView] = useState<View>(initialView)
 
   // 新增 view state
   const [newName, setNewName] = useState('')
@@ -41,14 +42,15 @@ export default function ListPanel({ lists, placeLists, currentTripId, onClose, o
   // ── 新增清單 ──
   async function handleAddList(e: React.FormEvent) {
     e.preventDefault()
-    if (!newName.trim()) return
+    if (!newName.trim() || !currentTripId) return
     setAdding(true)
-    await supabase.from('lists').insert({
+    const { error } = await supabase.from('lists').insert({
       trip_id: currentTripId,
       name: newName.trim(),
       color: newColor,
     })
     setAdding(false)
+    if (error) { alert(`新增失敗：${error.message}`); return }
     setNewName('')
     setNewColor(PRESET_COLORS[0])
     onListsChange()
@@ -110,12 +112,6 @@ export default function ListPanel({ lists, placeLists, currentTripId, onClose, o
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
             <Plus size={18} />
-          </button>
-          <button onClick={() => setView('manage')}
-            style={iconBtn} title="管理清單"
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-            <MoreHorizontal size={18} />
           </button>
         </div>
 
