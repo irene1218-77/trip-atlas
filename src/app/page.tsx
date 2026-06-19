@@ -744,7 +744,7 @@ export default function Home() {
 
       {/* 左側欄：trip-sidebar 讓 CSS media query 可控制手機版面 */}
       <aside className="trip-sidebar flex flex-col relative"
-        style={{ '--sidebar-mobile-height': `${sidebarHeight}vh`, width: '400px', minWidth: '400px', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface)', boxShadow: '2px 0 8px rgba(0,0,0,0.04)', isolation: 'isolate', overflow: 'hidden' } as React.CSSProperties}>
+        style={{ '--sidebar-mobile-height': `${sidebarHeight}vh`, width: '400px', minWidth: '400px', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface)', boxShadow: '2px 0 8px rgba(0,0,0,0.04)', isolation: 'isolate', overflow: 'clip' } as React.CSSProperties}>
 
         {/* 拖拉手把（手機版專用） */}
         <div
