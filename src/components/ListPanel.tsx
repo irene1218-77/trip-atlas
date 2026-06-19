@@ -153,7 +153,7 @@ export default function ListPanel({ lists, placeLists, currentTripId, initialVie
     return (
       <>
         <div className="px-5 py-4 flex items-center gap-3" style={headerStyle}>
-          <button onClick={() => setView('main')} style={iconBtn}
+          <button onClick={onClose} style={iconBtn}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
             <ArrowLeft size={18} />
