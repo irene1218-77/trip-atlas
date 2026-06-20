@@ -49,7 +49,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
         {/* Service Worker registration */}
         <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
+          if (location.hostname !== 'localhost' && 'serviceWorker' in navigator) {
             window.addEventListener('load', function() {
               navigator.serviceWorker.register('/sw.js').catch(function() {});
             });

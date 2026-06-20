@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Sparkles, ArrowLeft, X, Plus, Check, ChevronDown, ChevronUp, Star, MapPin } from 'lucide-react'
+import { Sparkles, ArrowLeft, X, Plus, Check, ChevronDown, ChevronUp, Star, MapPin, History } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import AnalysisRecords, { type HistoryItem } from './AnalysisRecords'
 
@@ -95,6 +95,34 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [fetchingTranscript, setFetchingTranscript] = useState(false)
   const [youtubeError, setYoutubeError] = useState<string | null>(null)
+
+  const [blogUrl, setBlogUrl] = useState('')
+  const [fetchingBlog, setFetchingBlog] = useState(false)
+  const [blogError, setBlogError] = useState<string | null>(null)
+
+  async function handleFetchBlog() {
+    if (!blogUrl.trim() || fetchingBlog || analyzing) return
+    setFetchingBlog(true)
+    setBlogError(null)
+    try {
+      const res = await fetch('/api/extract-blog-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: blogUrl.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setBlogError(data.error ?? '無法擷取網頁，請改用手動貼上文字稿')
+        return
+      }
+      setTranscript(data.text)
+      setBlogUrl('')
+    } catch {
+      setBlogError('網路錯誤，請稍後再試')
+    } finally {
+      setFetchingBlog(false)
+    }
+  }
 
   async function saveAnalysis(t: string, r: ExtractResult): Promise<string | null> {
     const { data, error } = await supabase
@@ -333,6 +361,11 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
               {results ? '分析結果' : '旅行小助手'}
             </span>
           </div>
+          <button onClick={() => setShowRecords(true)} className="rounded-lg p-1.5"
+            style={{ color: 'var(--color-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            title="歷史紀錄">
+            <History size={16} />
+          </button>
           <button onClick={() => { setIsOpen(false); onClosePanel?.() }} className="rounded-lg p-1.5"
             style={{ color: 'var(--color-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}
             title="關閉">
@@ -369,6 +402,37 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
                 </div>
                 {youtubeError && (
                   <p className="text-xs px-1" style={{ color: '#B91C1C' }}>{youtubeError}</p>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1" style={{ height: 1, background: 'var(--color-border)' }} />
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>或貼部落格網址</span>
+                <div className="flex-1" style={{ height: 1, background: 'var(--color-border)' }} />
+              </div>
+
+              {/* Blog URL section */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex gap-2">
+                  <input
+                    value={blogUrl}
+                    onChange={e => { setBlogUrl(e.target.value); setBlogError(null) }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleFetchBlog() } }}
+                    placeholder="貼部落格文章網址…"
+                    className="flex-1 min-w-0 rounded-lg px-3 py-2 text-xs outline-none"
+                    style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'var(--color-bg)' }}
+                  />
+                  <button
+                    onClick={handleFetchBlog}
+                    disabled={!blogUrl.trim() || fetchingBlog || analyzing}
+                    className="rounded-lg px-3 py-2 text-xs font-medium flex-shrink-0 disabled:opacity-40"
+                    style={{ border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent', cursor: 'pointer' }}>
+                    {fetchingBlog ? '擷取中…' : '擷取文章'}
+                  </button>
+                </div>
+                {blogError && (
+                  <p className="text-xs px-1" style={{ color: '#B91C1C' }}>{blogError}</p>
                 )}
               </div>
 
