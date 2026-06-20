@@ -1,11 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function SplashScreen() {
   // 先 false 避免 SSR/hydration 不一致，useEffect 後才決定要不要顯示
   const [visible, setVisible] = useState(false)
   const [fading, setFading] = useState(false)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  function dismiss() {
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+    setVisible(false)
+  }
 
   useEffect(() => {
     const seen = sessionStorage.getItem('tripAtlasSplashSeen')
@@ -13,10 +20,16 @@ export default function SplashScreen() {
     sessionStorage.setItem('tripAtlasSplashSeen', '1')
     setVisible(true)
 
-    // 兩個 timer 各自獨立，cleanup 都能回收
-    const t1 = setTimeout(() => setFading(true), 1500)       // 1.5s 開始淡出
-    const t2 = setTimeout(() => setVisible(false), 2000)     // 2s unmount
-    return () => { clearTimeout(t1); clearTimeout(t2) }
+    const t1 = setTimeout(() => setFading(true), 1200)
+    const t2 = setTimeout(() => setVisible(false), 1700)
+    // 保底：3s 無論如何強制關閉（應對任何計時器延遲情境）
+    const t3 = setTimeout(() => setVisible(false), 3000)
+    timersRef.current = [t1, t2, t3]
+
+    return () => {
+      timersRef.current.forEach(clearTimeout)
+      timersRef.current = []
+    }
   }, [])
 
   if (!visible) return null
@@ -35,9 +48,10 @@ export default function SplashScreen() {
         }
       `}</style>
       <div
+        onClick={dismiss}
         style={{
           position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'white',
+          background: 'white', cursor: 'pointer',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 20,
           transition: 'opacity 0.5s ease',

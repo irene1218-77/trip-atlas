@@ -245,12 +245,15 @@ export default function Home() {
     async function init() {
       const { data } = await supabase
         .from('trips').select('id').order('created_at', { ascending: true })
-      if (!data?.length) return
+      if (!data?.length) {
+        setLoading(false)
+        return
+      }
       const saved = localStorage.getItem('tripAtlas_currentTripId')
       const valid = data.find(t => t.id === saved)
       setCurrentTripId(valid ? (saved as string) : data[0].id)
     }
-    init()
+    init().catch(() => setLoading(false))
   }, [])
 
   // 切換 trip 時重新撈所有資料
