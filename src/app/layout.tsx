@@ -44,7 +44,7 @@ export default function RootLayout({
         {/* Google Maps JS API — 預載 maps / places / marker 三個 library */}
         <script
           async
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY}&libraries=maps,places,marker&loading=async&language=zh-TW&region=TW`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY}&loading=async&language=zh-TW&region=TW`}
         />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
         {/* Service Worker registration */}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Place, ItineraryItem, List, PlaceList } from '@/types'
 
 export interface MapClickData {
@@ -89,6 +89,7 @@ const POI_CATEGORIES = ['餐廳', '咖啡廳', '景點', '海邊', '寺廟', '�
 export default function Map({ places, placeLists = [], lists = [], activeId, onMapClick, onPoiAdd, onMarkerClick, selectedDay, itineraryItems = [],
   activePlaceId, panTo,
 }: MapProps) {
+  const [mapError, setMapError] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
@@ -314,13 +315,29 @@ export default function Map({ places, placeLists = [], lists = [], activeId, onM
       })
     }
 
+    let attempt = 0
+    async function tryInit() {
+      try {
+        await initMap()
+        setMapError(false)
+      } catch (err) {
+        console.error(`地圖載入失敗（第 ${attempt + 1} 次）:`, err)
+        attempt++
+        if (attempt < 3 && containerRef.current) {
+          setTimeout(tryInit, 2000)
+        } else if (containerRef.current) {
+          setMapError(true)
+        }
+      }
+    }
+
     if ((window as any).google?.maps) {
-      initMap()
+      tryInit()
     } else {
       const interval = setInterval(() => {
         if ((window as any).google?.maps) {
           clearInterval(interval)
-          initMap()
+          tryInit()
         }
       }, 100)
       return () => clearInterval(interval)
@@ -339,7 +356,14 @@ export default function Map({ places, placeLists = [], lists = [], activeId, onM
     }
 
     async function updateMarkers() {
-      const { AdvancedMarkerElement } = await (window as any).google.maps.importLibrary('marker') as google.maps.MarkerLibrary
+      let markerLib: google.maps.MarkerLibrary
+      try {
+        markerLib = await (window as any).google.maps.importLibrary('marker') as google.maps.MarkerLibrary
+      } catch (err) {
+        console.error('地圖標記載入失敗:', err)
+        return
+      }
+      const { AdvancedMarkerElement } = markerLib
 
       markersRef.current.forEach((m) => { m.map = null })
       markersRef.current = []
@@ -450,5 +474,25 @@ export default function Map({ places, placeLists = [], lists = [], activeId, onM
     mapRef.current.setZoom(15)
   }, [activePlaceId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+  return (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      {mapError && (
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: '#f9fafb', gap: 12,
+        }}>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>地圖載入失敗</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              fontSize: 13, padding: '8px 16px', borderRadius: 8,
+              background: '#2D6A4F', color: 'white', border: 'none', cursor: 'pointer',
+            }}
+          >重新載入</button>
+        </div>
+      )}
+    </div>
+  )
 }

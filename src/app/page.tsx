@@ -102,6 +102,7 @@ export default function Home() {
   const [showNotesPanel, setShowNotesPanel] = useState(false)
   const [showChecklistPanel, setShowChecklistPanel] = useState(false)
   const [checklistType, setChecklistType] = useState<'checklist' | 'packing'>('checklist')
+  const [pendingPoiAdd, setPendingPoiAdd] = useState<PoiAddData | null>(null)
   const [mapPanTo, setMapPanTo] = useState<{ lat: number; lng: number; zoom?: number } | null>(null)
   const [tripRegion, setTripRegion] = useState<TripRegion | null>(null)
   const [previewMarker, setPreviewMarker] = useState<{ lat: number; lng: number; name: string } | null>(null)
@@ -584,7 +585,7 @@ export default function Home() {
     setActiveId('__pending__')
   }
 
-  async function handlePoiAdd(data: PoiAddData) {
+  async function executePoiAdd(data: PoiAddData) {
     if (!currentTripId) return
     const { error } = await supabase.from('places').insert({
       trip_id: currentTripId,
@@ -599,6 +600,15 @@ export default function Home() {
     })
     if (error) { console.error('handlePoiAdd error', error); return }
     fetchPlaces()
+  }
+
+  async function handlePoiAdd(data: PoiAddData) {
+    if (!currentTripId) return
+    const dup = data.googlePlaceId
+      ? places.find(p => p.google_place_id === data.googlePlaceId)
+      : null
+    if (dup) { setPendingPoiAdd(data); return }
+    await executePoiAdd(data)
   }
 
   // 把地點加進某天行程
@@ -1542,6 +1552,38 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* POI 重複新增確認 */}
+      {pendingPoiAdd && (() => {
+        const dup = places.find(p => p.google_place_id === pendingPoiAdd.googlePlaceId)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+            onClick={() => setPendingPoiAdd(null)}>
+            <div className="rounded-xl shadow-lg p-5 mx-4 max-w-xs w-full"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              onClick={e => e.stopPropagation()}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--color-text)' }}>重複地點</p>
+              <div className="flex items-start gap-1.5 rounded-xl px-2.5 py-2 text-xs leading-snug mb-4"
+                style={{ background: '#fef9c3', color: '#854d0e', border: '1px solid #fde68a' }}>
+                ⚠️ 清單裡已有「{dup?.name ?? pendingPoiAdd.name}」，確定要重複新增嗎？
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setPendingPoiAdd(null)}
+                  className="flex-1 rounded-lg py-2 text-sm font-medium"
+                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'transparent' }}>
+                  取消
+                </button>
+                <button onClick={() => { executePoiAdd(pendingPoiAdd); setPendingPoiAdd(null) }}
+                  className="flex-1 rounded-lg py-2 text-sm font-medium text-white"
+                  style={{ background: 'var(--color-primary)' }}>
+                  仍要新增
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Lightbox */}
       {lightboxSrc && (
