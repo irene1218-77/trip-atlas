@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { X, Trash2, Star, BookOpen } from 'lucide-react'
+import { X, Trash2, BookOpen } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface PlaceResult {
@@ -89,9 +89,6 @@ export default function AnalysisRecords({ isOpen, onClose, onLoadAnalysis }: Pro
     return trips.find(t => t.id === tripId)?.name ?? ''
   }
 
-  const named = records.filter(r => r.name)
-  const unnamed = records.filter(r => !r.name)
-
   const filterBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 500,
     flexShrink: 0, cursor: 'pointer', border: 'none',
@@ -145,31 +142,13 @@ export default function AnalysisRecords({ isOpen, onClose, onLoadAnalysis }: Pro
           </p>
         ) : (
           <div className="p-4 flex flex-col gap-2">
-            {named.length > 0 && (
-              <>
-                <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>已儲存</p>
-                {named.map(item => (
-                  <RecordRow key={item.id} item={item}
-                    tripName={filterTripId === null ? getTripName(item.trip_id) : ''}
-                    onLoad={() => onLoadAnalysis(item)}
-                    onDelete={() => handleDelete(item.id)}
-                    formatDate={formatDate} />
-                ))}
-              </>
-            )}
-            {unnamed.length > 0 && (
-              <>
-                <p className={`text-xs font-semibold${named.length > 0 ? ' mt-2' : ''}`}
-                  style={{ color: 'var(--color-text-muted)' }}>歷史紀錄</p>
-                {unnamed.map(item => (
-                  <RecordRow key={item.id} item={item}
-                    tripName={filterTripId === null ? getTripName(item.trip_id) : ''}
-                    onLoad={() => onLoadAnalysis(item)}
-                    onDelete={() => handleDelete(item.id)}
-                    formatDate={formatDate} />
-                ))}
-              </>
-            )}
+            {records.map(item => (
+              <RecordRow key={item.id} item={item}
+                tripName={filterTripId === null ? getTripName(item.trip_id) : ''}
+                onLoad={() => onLoadAnalysis(item)}
+                onDelete={() => handleDelete(item.id)}
+                formatDate={formatDate} />
+            ))}
           </div>
         )}
       </div>
@@ -193,9 +172,6 @@ function RecordRow({ item, tripName, onLoad, onDelete, formatDate }: {
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
         <div className="flex items-center gap-1.5">
-          {item.name && (
-            <Star size={11} fill="var(--color-primary)" stroke="var(--color-primary)" style={{ flexShrink: 0 }} />
-          )}
           <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>
             {item.name ?? `${item.transcript.slice(0, 28).trim()}${item.transcript.length > 28 ? '…' : ''}`}
           </p>

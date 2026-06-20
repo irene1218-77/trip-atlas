@@ -124,10 +124,19 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
     }
   }
 
-  async function saveAnalysis(t: string, r: ExtractResult): Promise<string | null> {
+  function autoAnalysisName(): string {
+    const now = new Date()
+    const m = now.getMonth() + 1
+    const d = now.getDate()
+    const h = now.getHours().toString().padStart(2, '0')
+    const min = now.getMinutes().toString().padStart(2, '0')
+    return `${m}/${d} ${h}:${min} 分析`
+  }
+
+  async function saveAnalysis(t: string, r: ExtractResult, name: string): Promise<string | null> {
     const { data, error } = await supabase
       .from('transcript_analyses')
-      .insert({ trip_id: tripId, transcript: t, result: r })
+      .insert({ trip_id: tripId, transcript: t, result: r, name })
       .select('id')
       .single()
     if (error) { console.error('[analysis] save error:', error); return null }
@@ -172,8 +181,10 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
       setExpandedPlace(null)
       setPlaceDetails({})
       setCurrentAnalysisName(null)
-      const id = await saveAnalysis(fetchedTranscript, data)
+      const autoName = autoAnalysisName()
+      const id = await saveAnalysis(fetchedTranscript, data, autoName)
       setCurrentAnalysisId(id)
+      setCurrentAnalysisName(autoName)
     } catch {
       setError('網路錯誤，請稍後再試')
     } finally {
@@ -204,8 +215,10 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
       setExpandedPlace(null)
       setPlaceDetails({})
       setCurrentAnalysisName(null)
-      const id = await saveAnalysis(transcript, data)
+      const autoName = autoAnalysisName()
+      const id = await saveAnalysis(transcript, data, autoName)
       setCurrentAnalysisId(id)
+      setCurrentAnalysisName(autoName)
     } catch {
       setError('網路錯誤，請稍後再試')
     } finally {
@@ -328,14 +341,6 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
 
   return (
     <>
-      {/* AnalysisRecords panel */}
-      <AnalysisRecords
-        isOpen={showRecords}
-        tripId={tripId}
-        onClose={() => setShowRecords(false)}
-        onLoadAnalysis={handleLoadFromRecords}
-      />
-
       {/* Main panel */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 5,
@@ -463,30 +468,20 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
             </div>
           ) : (
             <div className="flex flex-col gap-2 p-4">
-              {/* Save bar */}
+              {/* Save bar — 每次分析自動命名，顯示名稱 + 重新命名 */}
               <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-1"
                 style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-                {currentAnalysisName ? (
-                  <>
-                    <Star size={12} fill="var(--color-primary)" stroke="var(--color-primary)" style={{ flexShrink: 0 }} />
-                    <span className="text-xs flex-1 truncate" style={{ color: 'var(--color-text)' }}>{currentAnalysisName}</span>
-                    <button
-                      onClick={() => { setSaveName(currentAnalysisName); setShowSaveDialog(true) }}
-                      className="text-xs flex-shrink-0"
-                      style={{ color: 'var(--color-primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                      重新命名
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1" />
-                    <button
-                      onClick={() => { setSaveName(''); setShowSaveDialog(true) }}
-                      className="text-xs flex-shrink-0 px-2.5 py-1 rounded-lg font-semibold"
-                      style={{ background: 'var(--color-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>
-                      儲存分析
-                    </button>
-                  </>
+                <Star size={12} fill="var(--color-primary)" stroke="var(--color-primary)" style={{ flexShrink: 0 }} />
+                <span className="text-xs flex-1 truncate" style={{ color: 'var(--color-text)' }}>
+                  {currentAnalysisName ?? '儲存中…'}
+                </span>
+                {currentAnalysisId && (
+                  <button
+                    onClick={() => { setSaveName(currentAnalysisName ?? ''); setShowSaveDialog(true) }}
+                    className="text-xs flex-shrink-0"
+                    style={{ color: 'var(--color-primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                    重新命名
+                  </button>
                 )}
               </div>
 
@@ -701,7 +696,7 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
           }}>
             <div className="mx-4 rounded-2xl p-5 w-full"
               style={{ maxWidth: 320, background: 'var(--color-surface)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-              <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>儲存分析結果</p>
+              <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>重新命名分析</p>
               <input
                 autoFocus
                 value={saveName}
@@ -730,6 +725,14 @@ export default function TripInfoExtractor({ tripId, tripRegion, onPlaceAdded, on
           </div>
         )}
       </div>
+
+      {/* AnalysisRecords panel — 放在 Main panel 之後，同 zIndex 時後者蓋前者 */}
+      <AnalysisRecords
+        isOpen={showRecords}
+        tripId={tripId}
+        onClose={() => setShowRecords(false)}
+        onLoadAnalysis={handleLoadFromRecords}
+      />
     </>
   )
 }
