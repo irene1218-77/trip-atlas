@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, NotebookPen, Share2, Check, ListChecks, ClipboardList } from 'lucide-react'
+import { Sparkles, NotebookPen, Share2, Check, ListChecks, ClipboardList, Backpack } from 'lucide-react'
 
 interface Props {
   isOpen: boolean
@@ -9,7 +9,7 @@ interface Props {
   onOpenAI: () => void
   onOpenNotes: () => void
   onOpenManageLists: () => void
-  onOpenChecklist: () => void
+  onOpenChecklist: (type: 'checklist' | 'packing') => void
   tripId: string | null
 }
 
@@ -31,9 +31,9 @@ export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, onOpe
     setTimeout(onOpenManageLists, 280)
   }
 
-  function handleOpenChecklist() {
+  function handleOpenChecklist(type: 'checklist' | 'packing') {
     onClose()
-    setTimeout(onOpenChecklist, 280)
+    setTimeout(() => onOpenChecklist(type), 280)
   }
 
   async function handleShare() {
@@ -82,7 +82,13 @@ export default function SideMenu({ isOpen, onClose, onOpenAI, onOpenNotes, onOpe
       label: '出發前清單',
       desc: '護照、簽證、保險…逐項確認不漏帶',
       icon: <ClipboardList size={18} />,
-      onClick: handleOpenChecklist,
+      onClick: () => handleOpenChecklist('checklist'),
+    },
+    {
+      label: '打包清單',
+      desc: '衣物、藥品、充電器…出發前整理行李',
+      icon: <Backpack size={18} />,
+      onClick: () => handleOpenChecklist('packing'),
     },
   ]
 

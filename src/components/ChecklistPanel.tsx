@@ -7,32 +7,44 @@ import { supabase } from '@/lib/supabase'
 interface ChecklistItem {
   id: string
   trip_id: string
+  type: string
   text: string
   is_done: boolean
   order_index: number
   created_at: string
 }
 
-const PRESETS = ['護照效期', '簽證', '海外保險', '訂位確認', '換匯', '行動網路']
+const PRESETS: Record<'checklist' | 'packing', string[]> = {
+  checklist: ['護照效期', '簽證', '海外保險', '訂位確認', '換匯', '行動網路'],
+  packing:   ['衣物', '盥洗用品', '充電器/轉接頭', '藥品', '防曬乳', '雨具'],
+}
+
+const TITLES: Record<'checklist' | 'packing', string> = {
+  checklist: '出發前清單',
+  packing:   '打包清單',
+}
 
 interface Props {
   tripId: string
+  type: 'checklist' | 'packing'
   onClose: () => void
 }
 
-export default function ChecklistPanel({ tripId, onClose }: Props) {
+export default function ChecklistPanel({ tripId, type, onClose }: Props) {
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [newText, setNewText] = useState('')
   const [adding, setAdding] = useState(false)
 
-  useEffect(() => { fetchItems() }, [])
+  useEffect(() => { fetchItems() }, [type])
 
   async function fetchItems() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trip_checklist')
       .select('*')
       .eq('trip_id', tripId)
+      .eq('type', type)
       .order('order_index', { ascending: true })
+    if (error) { console.error('fetchItems error:', error); return }
     if (data) setItems(data as ChecklistItem[])
   }
 
@@ -41,28 +53,41 @@ export default function ChecklistPanel({ tripId, onClose }: Props) {
     if (!t || adding) return
     setAdding(true)
     const maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order_index)) : -1
-    await supabase.from('trip_checklist').insert({
+    const { error } = await supabase.from('trip_checklist').insert({
       trip_id: tripId,
+      type,
       text: t,
       is_done: false,
       order_index: maxOrder + 1,
     })
+    if (error) {
+      alert(`新增失敗：${error.message}`)
+      setAdding(false)
+      return
+    }
     setNewText('')
     await fetchItems()
     setAdding(false)
   }
 
   async function handleToggle(item: ChecklistItem) {
-    await supabase.from('trip_checklist').update({ is_done: !item.is_done }).eq('id', item.id)
+    const { error } = await supabase
+      .from('trip_checklist')
+      .update({ is_done: !item.is_done })
+      .eq('id', item.id)
+    if (error) { console.error('handleToggle error:', error); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_done: !i.is_done } : i))
   }
 
   async function handleDelete(id: string) {
-    await supabase.from('trip_checklist').delete().eq('id', id)
+    const { error } = await supabase.from('trip_checklist').delete().eq('id', id)
+    if (error) { console.error('handleDelete error:', error); return }
     setItems(prev => prev.filter(i => i.id !== id))
   }
 
   const doneCount = items.filter(i => i.is_done).length
+  const presets = PRESETS[type]
+  const title = TITLES[type]
 
   const iconBtn: React.CSSProperties = {
     color: 'var(--color-text-muted)',
@@ -86,7 +111,7 @@ export default function ChecklistPanel({ tripId, onClose }: Props) {
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
           <ArrowLeft size={18} />
         </button>
-        <span className="text-sm font-semibold flex-1" style={{ color: 'var(--color-text)' }}>出發前清單</span>
+        <span className="text-sm font-semibold flex-1" style={{ color: 'var(--color-text)' }}>{title}</span>
         {items.length > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full"
             style={{ background: 'var(--color-primary-pale)', color: 'var(--color-primary)' }}>
@@ -121,7 +146,7 @@ export default function ChecklistPanel({ tripId, onClose }: Props) {
           <div>
             <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>常見項目快速新增：</p>
             <div className="flex flex-wrap gap-2">
-              {PRESETS.map(p => (
+              {presets.map(p => (
                 <button key={p} onClick={() => handleAdd(p)}
                   className="px-3 py-1.5 rounded-lg text-xs font-medium"
                   style={{ border: '1px dashed var(--color-border)', color: 'var(--color-text-muted)', background: 'transparent', cursor: 'pointer' }}

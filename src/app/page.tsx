@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Trash2, ArrowLeft, MapPin, ExternalLink, Pencil, Search, NotebookPen, Menu, Check, X, ClipboardList } from 'lucide-react'
+import { Trash2, ArrowLeft, MapPin, ExternalLink, Pencil, Search, NotebookPen, Menu, Check, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import ListPanel from '@/components/ListPanel'
 import PlaceLinks from '@/components/PlaceLinks'
@@ -101,6 +101,7 @@ export default function Home() {
   const [showLocalSearch, setShowLocalSearch] = useState(false)
   const [showNotesPanel, setShowNotesPanel] = useState(false)
   const [showChecklistPanel, setShowChecklistPanel] = useState(false)
+  const [checklistType, setChecklistType] = useState<'checklist' | 'packing'>('checklist')
   const [mapPanTo, setMapPanTo] = useState<{ lat: number; lng: number; zoom?: number } | null>(null)
   const [tripRegion, setTripRegion] = useState<TripRegion | null>(null)
   const [previewMarker, setPreviewMarker] = useState<{ lat: number; lng: number; name: string } | null>(null)
@@ -706,7 +707,7 @@ export default function Home() {
         onOpenAI={() => setAiOpenTrigger(t => t + 1)}
         onOpenNotes={() => { setShowNotesPanel(true); setDetailPlace(null); setShowListPanel(false); setShowChecklistPanel(false) }}
         onOpenManageLists={() => openListPanel('manage')}
-        onOpenChecklist={() => { setShowChecklistPanel(true); setDetailPlace(null); setShowListPanel(false); setShowNotesPanel(false) }}
+        onOpenChecklist={(type) => { setChecklistType(type); setShowChecklistPanel(true); setDetailPlace(null); setShowListPanel(false); setShowNotesPanel(false) }}
         tripId={currentTripId}
       />
 
@@ -795,13 +796,6 @@ export default function Home() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-primary)' }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)' }}
           ><NotebookPen size={16} /></button>
-          <button onClick={() => { setShowChecklistPanel(true); setDetailPlace(null); setShowListPanel(false); setShowNotesPanel(false) }}
-            title="出發前清單"
-            className="rounded-lg p-2 transition-colors"
-            style={{ color: 'var(--color-text-muted)', background: 'transparent', border: 'none' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-pale)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-primary)' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)' }}
-          ><ClipboardList size={16} /></button>
         </div>
 
         {/* 地點 / 行程 tab 切換 */}
@@ -1363,7 +1357,7 @@ export default function Home() {
         <div className="absolute inset-0 flex flex-col"
           style={{ background: 'var(--color-surface)', transform: showChecklistPanel ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.25s ease', zIndex: 10, height: '100%', overflow: 'hidden' }}>
           {showChecklistPanel && (
-            <ChecklistPanel tripId={currentTripId ?? ''} onClose={() => setShowChecklistPanel(false)} />
+            <ChecklistPanel tripId={currentTripId ?? ''} type={checklistType} onClose={() => setShowChecklistPanel(false)} />
           )}
         </div>
 
